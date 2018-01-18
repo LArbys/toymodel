@@ -21,7 +21,7 @@ def main(VTX_FILE,OUT_DIR,CFG):
 
     rd = ROOTData()
 
-    NUM = int(VTX_FILE.split(".")[0].split("_")[-1])
+    NUM = int(os.path.basename(VTX_FILE).split(".")[0].split("_")[-1])
     FOUT = os.path.join(OUT_DIR,"multipid_out_%d.root" % NUM)
     tfile = ROOT.TFile.Open(FOUT,"RECREATE")
     tfile.cd()
