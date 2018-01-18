@@ -78,7 +78,7 @@ def main(VTX_FILE,OUT_DIR,CFG):
         rd.run[0]    = int(ev_pix.run())
         rd.subrun[0] = int(ev_pix.subrun())
         rd.event[0]  = int(ev_pix.event())
-
+        rd.entry[0]  = int(iom.current_entry())
         rd.plane[0]  = int(cfg.plane)
 
         pixel2d_vv = ev_pix.Pixel2DClusterArray()
@@ -133,8 +133,6 @@ def main(VTX_FILE,OUT_DIR,CFG):
         #ev_img.Append(img)        
         #oiom.set_id(ev_pix.run(),ev_pix.subrun(),ev_pix.event())
         #oiom.save_entry()
-        
-        if entry==10: break
         
     tfile.cd()
     tree.Write()

@@ -11,6 +11,7 @@ class ROOTData:
         self.run    = array( 'i', [ kINVALID_INT ] )
         self.subrun = array( 'i', [ kINVALID_INT ] )
         self.event  = array( 'i', [ kINVALID_INT ] )
+        self.entry  = array( 'i', [ kINVALID_INT ] )
         self.vtxid  = array( 'i', [ kINVALID_INT ] )
         self.plane  = array( 'i', [ kINVALID_INT ] )
 
@@ -28,6 +29,8 @@ class ROOTData:
         self.run[0]     = kINVALID_INT
         self.subrun[0]  = kINVALID_INT
         self.event[0]   = kINVALID_INT
+        self.entry[0]   = kINVALID_INT
+
         self.plane[0]   = kINVALID_INT
 
         self.num_vertex[0] = kINVALID_INT
@@ -52,6 +55,7 @@ class ROOTData:
         tree.Branch("run"   , self.run   , "run/I")
         tree.Branch("subrun", self.subrun, "subrun/I")
         tree.Branch("event" , self.event , "event/I")
+        tree.Branch("entry" , self.entry , "entry/I")
 
         tree.Branch("vtxid" , self.vtxid, "vtxid/I")
         tree.Branch("plane" , self.plane, "plane/I") 
