@@ -50,16 +50,16 @@ def main(VTX_FILE,OUT_DIR,CFG):
     session_conf = tf.ConfigProto(intra_op_parallelism_threads=1,inter_op_parallelism_threads=1)
     sess = tf.InteractiveSession(config=session_conf)
     sess.run(tf.global_variables_initializer())
-    reader=tf.train.Saver()
-    reader.restore(sess,cfg.weight_file)
+    reader = tf.train.Saver()
+
 
     #
     # initialize iomanager
     #
 
-    #oiom = larcv.IOManager(larcv.IOManager.kWRITE)
-    #oiom.set_out_file("trash.root")
-    #oiom.initialize()
+    # oiom = larcv.IOManager(larcv.IOManager.kWRITE)
+    # oiom.set_out_file("trash.root")
+    # oiom.initialize()
 
     iom  = larcv.IOManager(larcv.IOManager.kREAD)
     iom.add_in_file(VTX_FILE)
@@ -79,53 +79,53 @@ def main(VTX_FILE,OUT_DIR,CFG):
         rd.subrun[0] = int(ev_pix.subrun())
         rd.event[0]  = int(ev_pix.event())
         rd.entry[0]  = int(iom.current_entry())
-        rd.plane[0]  = int(cfg.plane)
 
-        pixel2d_vv = ev_pix.Pixel2DClusterArray()
-        if pixel2d_vv.empty()==True:
-            rd.num_vertex[0] = 0
-            tree.Fill()
-            rd.reset_event()
-            continue
-
-        pixel2d_v = pixel2d_vv.at(cfg.plane)
-        
         rd.num_vertex[0] = int(ev_pgr.PGraphArray().size())
-        
+
+
         for ix,pgraph in enumerate(ev_pgr.PGraphArray()):
-            
+            print "@pgid=%d" % ix
             rd.vtxid[0] = int(ix)
 
-            print "@pgid=%d" % ix
-            
+            pixel2d_vv = ev_pix.Pixel2DClusterArray()
             parid = pgraph.ClusterIndexArray().front()
-            pixel2d = pixel2d_v.at(parid)
+
+            for plane in xrange(3):
+                print "@plane=%d" % plane
+
+                weight_file = ""
+                exec("weight_file = cfg.weight_file%d" % plane)
+
+                reader.restore(sess,weight_file)
+
+                # nothing
+                if pixel2d_vv.empty()==True: continue
+
+                pixel2d_v = pixel2d_vv.at(plane)
+                pixel2d = pixel2d_v.at(parid)
             
-            if pixel2d.empty() == True:
-                rd.inferred[0] = 0
-                tree.Fill()
-                rd.reset_vertex()
-                continue
+                # nothing on this plane
+                if pixel2d.empty() == True: continue
 
-            rd.inferred[0] = 1
+                rd.inferred[0] = 1
 
-            img = larcv.cluster_to_image2d(pixel2d,cfg.xdim,cfg.ydim)
+                img = larcv.cluster_to_image2d(pixel2d,cfg.xdim,cfg.ydim)
             
-            img_arr  = np.array(img.as_vector())
-            img_arr = np.where(img_arr<cfg.adc_lo,         0,img_arr)
-            img_arr = np.where(img_arr>cfg.adc_hi,cfg.adc_hi,img_arr)
+                img_arr = np.array(img.as_vector())
+                img_arr = np.where(img_arr<cfg.adc_lo,         0,img_arr)
+                img_arr = np.where(img_arr>cfg.adc_hi,cfg.adc_hi,img_arr)
+                
+                img_arr = img_arr.reshape(cfg.batch,img_arr.size).astype(np.float32)
+                
+                score_vv = sess.run(sigmoid,feed_dict={data_tensor: img_arr})
+                score_v  = score_vv[0]
 
-            img_arr = img_arr.reshape(cfg.batch,img_arr.size).astype(np.float32)
-            
-            score_vv = sess.run(sigmoid,feed_dict={data_tensor: img_arr})
-            score_v = score_vv[0]
-
-            rd.eminus_score[0] = score_v[0]
-            rd.gamma_score[0]  = score_v[1]
-            rd.muon_score[0]   = score_v[2]
-            rd.pion_score[0]   = score_v[3]
-            rd.proton_score[0] = score_v[4]
-        
+                rd.eminus_score[plane] = score_v[0]
+                rd.gamma_score[plane]  = score_v[1]
+                rd.muon_score[plane]   = score_v[2]
+                rd.pion_score[plane]   = score_v[3]
+                rd.proton_score[plane] = score_v[4]
+                
             tree.Fill()
             rd.reset_vertex()
 
