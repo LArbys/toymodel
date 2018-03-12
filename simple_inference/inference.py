@@ -72,7 +72,8 @@ def main(VTX_FILE,OUT_DIR,CFG):
 
         ev_pgr = iom.get_data(larcv.kProductPGraph,"test")
         ev_pix = iom.get_data(larcv.kProductPixel2D,"test_super_img")
-
+        ev_img = iom.get_data(larcv.kProductImage2D,"?????")
+        
         print ev_pix.run(),ev_pix.subrun(),ev_pix.event()
 
         rd.run[0]    = int(ev_pix.run())
@@ -82,17 +83,36 @@ def main(VTX_FILE,OUT_DIR,CFG):
 
         rd.num_vertex[0] = int(ev_pgr.PGraphArray().size())
 
-
+        
+        
         for ix,pgraph in enumerate(ev_pgr.PGraphArray()):
             print "@pgid=%d" % ix
             rd.vtxid[0] = int(ix)
 
             pixel2d_vv = ev_pix.Pixel2DClusterArray()
             parid = pgraph.ClusterIndexArray().front()
+            roi0 = pgraph.ParticleArray().front()
+
+            x = roi0.X()
+            y = roi0.Y()
+            z = roi0.Z()
 
             for plane in xrange(3):
                 print "@plane=%d" % plane
 
+                ### Get 2D vertex Image
+                
+                meta = roi0.BB(plane)
+
+                x_2d, y_2d = larcv.Project3D(meta, x, y, z, 0.0, plane, x_2d, y_2d)
+
+                meta_crop = larcv.Imagemeta(meta.width, meta.height, 
+                                            cfg.xdim,cfg.ydim,
+                                            x_2d-cfg.xdim/2, y_2d-cfg.ydim/2,
+                                            meta.plane)
+
+                img_vtx = ev_img.at(plane).crop(meta)
+                ###
                 weight_file = ""
                 exec("weight_file = cfg.weight_file%d" % plane)
 
@@ -108,7 +128,7 @@ def main(VTX_FILE,OUT_DIR,CFG):
                 if pixel2d.empty() == True: continue
 
                 rd.inferred[0] = 1
-
+                
                 img = larcv.cluster_to_image2d(pixel2d,cfg.xdim,cfg.ydim)
             
                 img_arr = np.array(img.as_vector())
@@ -125,6 +145,24 @@ def main(VTX_FILE,OUT_DIR,CFG):
                 rd.muon_score[plane]   = score_v[2]
                 rd.pion_score[plane]   = score_v[3]
                 rd.proton_score[plane] = score_v[4]
+
+                ###### Adding scores for vertex images
+                img_vtx_arr = np.array(img_vtx.as_vector())
+                img_vtx_arr = np.where(img_vtx_arr<cfg.adc_lo,         0,img_vtx_arr)
+                img_vtx_arr = np.where(img_vtx_arr>cfg.adc_hi,cfg.adc_hi,img_vtx_arr)
+                
+                img_vtx_arr = img_vtx_arr.reshape(cfg.batch,img_vtx_arr.size).astype(np.float32)
+                
+                score_vv_vtx = sess.run(sigmoid,feed_dict={data_tensor: img_vtx_arr})
+                score_v_vtx  = score_vv_vtx[0]
+
+                rd.eminus_score_vtx[plane] = score_v_vtx[0]
+                rd.gamma_score_vtx[plane]  = score_v_vtx[1]
+                rd.muon_score_vtx[plane]   = score_v_vtx[2]
+                rd.pion_score_vtx[plane]   = score_v_vtx[3]
+                rd.proton_score_vtx[plane] = score_v_vtx[4]
+                ######
+
                 
             tree.Fill()
             rd.reset_vertex()
