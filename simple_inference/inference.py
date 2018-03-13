@@ -172,7 +172,7 @@ def main(VTX_FILE,OUT_DIR,CFG):
                 for y in xrange(cfg.ydim - stride +1):
                     print 'y',y,'/',cfg.ydim - stride
                     for x in xrange(cfg.xdim - stride +1):
-                        print 'x',x,'/', cfg.xdim - stride
+                        print 'y',y,'/', cfg.ydim - stride ,'x',x,'/', cfg.xdim - stride
                         test = img_ndarray.copy()
                         for s in xrange(stride):
                             test[y+s,x:x+stride]  = [1,1,1]
