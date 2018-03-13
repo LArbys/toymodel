@@ -23,6 +23,12 @@ class ROOTData:
         self.pion_score    = ROOT.std.vector("float")(3,kINVALID_FLOAT)
         self.proton_score  = ROOT.std.vector("float")(3,kINVALID_FLOAT)
 
+        self.eminus_score_vtx  = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.gamma_score_vtx   = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.muon_score_vtx    = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.pion_score_vtx    = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.proton_score_vtx  = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+
     def reset_event(self):
         self.run[0]     = kINVALID_INT
         self.subrun[0]  = kINVALID_INT
@@ -42,6 +48,11 @@ class ROOTData:
             self.muon_score[pl]   = kINVALID_FLOAT
             self.pion_score[pl]   = kINVALID_FLOAT
             self.proton_score[pl] = kINVALID_FLOAT 
+            self.eminus_score_vtx[pl] = kINVALID_FLOAT
+            self.gamma_score_vtx[pl]  = kINVALID_FLOAT
+            self.muon_score_vtx[pl]   = kINVALID_FLOAT
+            self.pion_score_vtx[pl]   = kINVALID_FLOAT
+            self.proton_score_vtx[pl] = kINVALID_FLOAT 
         
     def reset(self):
         self.reset_event()
@@ -65,3 +76,9 @@ class ROOTData:
         tree.Branch("muon_score"  , self.muon_score) 
         tree.Branch("pion_score"  , self.pion_score)
         tree.Branch("proton_score", self.proton_score)
+
+        tree.Branch("eminus_score_vtx", self.eminus_score)
+        tree.Branch("gamma_score_vtx" , self.gamma_score) 
+        tree.Branch("muon_score_vtx"  , self.muon_score) 
+        tree.Branch("pion_score_vtx"  , self.pion_score)
+        tree.Branch("proton_score_vtx", self.proton_score)
