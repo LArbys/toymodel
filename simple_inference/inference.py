@@ -15,6 +15,16 @@ from lib.rootdata import ROOTData
 
 larcv.LArbysLoader()
 
+
+def image_modify (img, cfg):
+    img_arr = np.array(img.as_vector())
+    img_arr = np.where(img_arr<cfg.adc_lo,         0,img_arr)
+    img_arr = np.where(img_arr>cfg.adc_hi,cfg.adc_hi,img_arr)
+    img_arr = img_arr.reshape(cfg.batch,img_arr.size).astype(np.float32)
+    return img_arr
+
+
+
 def main(VTX_FILE,OUT_DIR,CFG):
     #
     # initialize
@@ -141,20 +151,53 @@ def main(VTX_FILE,OUT_DIR,CFG):
                 
                 img = larcv.cluster_to_image2d(pixel2d,cfg.xdim,cfg.ydim)
 
-                #meta_crop = img.meta()
-                '''
+                #Plot the image from pgraph
+
                 import matplotlib.pyplot as plt
                 fig, ax = plt.subplots(nrows=1, ncols=1, figsize = (8, 6))
                 img_vtx_nd = larcv.as_ndarray(img)
                 ax.imshow(img_vtx_nd)
-                plt.savefig("pgraph_plane_%i"%plane)
-                '''
+                plt.savefig("image/%i_%i_%i_graph_plane_%i"%(ev_pix.run(), ev_pix.subrun(), ev_pix.event(), plane))
 
+                img_arr = image_modify(img, cfg)
+                
+                ######## Occlusion Analysis
+                
+                stride = 3                 
+                
+                occlusion_scores_eminus = np.zeros(shape = [cfg.xdim-stride+1, cfg.ydim-stride +1])
+                 
+                img_ndarray = larcv.as_ndarray(img)
+                
+                for y in xrange(cfg.ydim - stride +1):
+                    print 'y',y,'/',cfg.ydim - stride
+                    for x in xrange(cfg.xdim - stride +1):
+                        print 'x',x,'/', cfg.xdim - stride
+                        test = img_ndarray.copy()
+                        for s in xrange(stride):
+                            test[y+s,x:x+stride]  = [1,1,1]
+                            score_vv = sess.run(sigmoid,feed_dict={data_tensor: img_arr})
+                            occlusion_scores_eminus[x, y] = score_vv[0][0]
+                
+                fig, ax = plt.subplots(nrows=1, ncols=1, figsize = (8, 6))
+                ax.imshow(occlusion)
+                plt.savefig("image/%i_%i_%i_occlusion_plane_eminus_%i"%(ev_pix.run(), ev_pix.subrun(), ev_pix.event(), plane))
+
+                '''
+                print test.shape
+                print 508, test[508]
+                print 509, test[509]
+                print 510, test[510]
+                print 511, test[511]
+                '''
+                ######## Occlusion Analysis
+                '''
                 img_arr = np.array(img.as_vector())
                 img_arr = np.where(img_arr<cfg.adc_lo,         0,img_arr)
                 img_arr = np.where(img_arr>cfg.adc_hi,cfg.adc_hi,img_arr)
-                
                 img_arr = img_arr.reshape(cfg.batch,img_arr.size).astype(np.float32)
+                '''
+                
                 score_vv = sess.run(sigmoid,feed_dict={data_tensor: img_arr})
                 score_v  = score_vv[0]
 
@@ -166,16 +209,11 @@ def main(VTX_FILE,OUT_DIR,CFG):
 
                 ###### Adding scores for vertex images
                 #print x_2d, y_2d , 'x2d, y2d'
-
                 meta_crop = larcv.ImageMeta(512,512*6,
                                             512,512,
                                             0,8448,
                                             plane)
                 #print meta_crop.dump()
-
-                #print 'tl x', x_2d-256
-                #print 'tl y', y_2d*6+2400 + 256 *6
-                
                 meta_origin_x = max(x_2d-256, 0)
                 if (plane == 0): meta_origin_x = min(meta_origin_x, 3456-256)
                 if (plane == 1): meta_origin_x = min(meta_origin_x, 3456-256)
@@ -187,7 +225,7 @@ def main(VTX_FILE,OUT_DIR,CFG):
                 
                 meta_crop.reset_origin(meta_origin_x, meta_origin_y)
                 
-                #meta_crop.reset_origin(x_2d-256, y_2d*6+2400 + 256 *6)
+                #Plot the image from vertex
                 '''
                 print 'Vertex Meta'
                 print meta_crop.tl().x,meta_crop.tl().y
@@ -196,16 +234,15 @@ def main(VTX_FILE,OUT_DIR,CFG):
                 print meta_crop.br().x,meta_crop.br().y
                 '''                
                 #print meta_crop.dump()
-                
                 #print ev_img.at(plane).meta().dump()
 
                 img_vtx = ev_img.at(plane).crop(meta_crop)
-                '''
+
                 fig, ax = plt.subplots(nrows=1, ncols=1, figsize = (8, 6))
                 img_vtx_nd = larcv.as_ndarray(img_vtx)
                 ax.imshow(img_vtx_nd)
-                plt.savefig("vertex_plane_%i"%plane)
-                '''
+                plt.savefig("image/%i_%i_%i_vertex_plane_%i"%(ev_pix.run(), ev_pix.subrun(), ev_pix.event(),plane))
+
                 test_meta =  img_vtx.meta()
                 '''
                 print test_meta.tl().x,test_meta.tl().y
@@ -213,21 +250,14 @@ def main(VTX_FILE,OUT_DIR,CFG):
                 print test_meta.tr().x,test_meta.tr().y
                 print test_meta.br().x,test_meta.br().y
                 '''
-    
-                img_vtx_arr = np.array(img_vtx.as_vector())
-                img_vtx_arr = np.where(img_vtx_arr<cfg.adc_lo,         0,img_vtx_arr)
-                img_vtx_arr = np.where(img_vtx_arr>cfg.adc_hi,cfg.adc_hi,img_vtx_arr)
-                
-                print img_vtx_arr.size
-
-                img_vtx_arr = img_vtx_arr.reshape(cfg.batch,img_vtx_arr.size).astype(np.float32)
+                img_vtx_arr = image_modify(img_vtx, cfg)
                 
                 score_vv_vtx = sess.run(sigmoid,feed_dict={data_tensor: img_vtx_arr})
                 score_v_vtx  = score_vv_vtx[0]
                 
                 p_type = {0:"eminus", 1:"gamme", 2:"muon", 3:"piminus",4:"proton"}
                 
-                #for x in xrange(5): print p_type[x], score_v_vtx[x]
+                for x in xrange(5): print p_type[x], score_v_vtx[x]
                     
                 rd.eminus_score_vtx[plane] = score_v_vtx[0]
                 rd.gamma_score_vtx[plane]  = score_v_vtx[1]
@@ -237,7 +267,7 @@ def main(VTX_FILE,OUT_DIR,CFG):
                 ######
             tree.Fill()
             rd.reset_vertex()
-        #if (entry > 2) :break
+        if (entry > 0) :break
         #ev_img = oiom.get_data(larcv.kProductImage2D,"out")
         #ev_img.Append(img)        
         #oiom.set_id(ev_pix.run(),ev_pix.subrun(),ev_pix.event())
