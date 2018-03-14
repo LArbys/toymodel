@@ -161,57 +161,35 @@ def main(VTX_FILE,OUT_DIR,CFG):
                 img_arr = image_modify(img, cfg)
                 
                 ######## Occlusion Analysis Start
-                do_occlusion = False
+                do_occlusion = True
                 if (do_occlusion):
                 
                     stride = 3                 
                 
-                    occlusion_scores_eminus  = np.zeros(shape = [cfg.xdim-stride+1, cfg.ydim-stride +1])
-                    occlusion_scores_gamma   = np.zeros(shape = [cfg.xdim-stride+1, cfg.ydim-stride +1])
-                    occlusion_scores_muon    = np.zeros(shape = [cfg.xdim-stride+1, cfg.ydim-stride +1])
-                    occlusion_scores_piminus = np.zeros(shape = [cfg.xdim-stride+1, cfg.ydim-stride +1])
-                    occlusion_scores_proton  = np.zeros(shape = [cfg.xdim-stride+1, cfg.ydim-stride +1])
+                    occlusion_scores_5par = np.zeros(shape = [5, cfg.xdim-stride+1, cfg.ydim-stride +1])
                     
                     img_ndarray = larcv.as_ndarray(img)
                 
-<<<<<<< HEAD
+                    for x in xrange(img_ndarray.shape[0]):
+                        for y in xrange(img_ndarray.shape[1]):
+                            if (img_ndarray[x,y]>0):
+                                print img_ndarray[x,y]
+                    
                     for y in xrange(cfg.ydim - stride +1):
                         print 'y',y,'/',cfg.ydim - stride
                         for x in xrange(cfg.xdim - stride +1):
                             print 'y',y,'/', cfg.ydim - stride ,'x',x,'/', cfg.xdim - stride
                             test = img_ndarray.copy()
                             for s in xrange(stride):
-                                test[y+s,x:x+stride]  = [1,1,1]
+                                test[y+s,x:x+stride]  = [0,0,0]
                                 score_vv = sess.run(sigmoid,feed_dict={data_tensor: img_arr})
-                                occlusion_scores_eminus[x, y]  = score_vv[0][0]
-                                occlusion_scores_gamma[x, y]   = score_vv[0][1]
-                                occlusion_scores_muon[x, y]    = score_vv[0][2]
-                                occlusion_scores_piminus[x, y] = score_vv[0][3]
-                                occlusion_scores_proton[x, y]  = score_vv[0][4]
-                
-                    fig, ax = plt.subplots(nrows=1, ncols=1, figsize = (8, 6))
-                    ax.imshow(occlusion)
-                    plt.savefig("image/%i_%i_%i_occlusion_plane_eminus_%i"%(ev_pix.run(), ev_pix.subrun(), ev_pix.event(), plane))
-=======
-                for y in xrange(cfg.ydim - stride +1):
-                    print 'y',y,'/',cfg.ydim - stride
-                    for x in xrange(cfg.xdim - stride +1):
-                        print 'y',y,'/', cfg.ydim - stride ,'x',x,'/', cfg.xdim - stride
-                        test = img_ndarray.copy()
-                        print 'no occlusion',test
-                        for s in xrange(stride):
-                            test[y+s,x:x+stride]  = [0,0,0]
-                        print 'occlusion',test
-                        score_vv = sess.run(sigmoid,feed_dict={data_tensor: img_arr})
-                        occlusion_scores_eminus[x, y] = score_vv[0][0]
-                            
-                
-                np.savetxt('occlusion.txt', occlusion_scores_eminus)
-                
-                fig, ax = plt.subplots(nrows=1, ncols=1, figsize = (8, 6))
-                ax.imshow(occlusion_scores_eminus)
-                plt.savefig("image/%i_%i_%i_occlusion_plane_eminus_%i"%(ev_pix.run(), ev_pix.subrun(), ev_pix.event(), plane))
->>>>>>> 11baef66a0e316b0e8c98bbc7c5780c7b35337e0
+                                for idx in xrange(5):
+                                    occlusion_scores_5par[idx,x, y]  = score_vv[0][idx]
+
+                    np.savetxt("occlusion_%i_%i_%i_%i.txt"%(ev_pix.run(), ev_pix.subrun(), ev_pix.event(), plane), occlusion_scores_5pars)
+                    #fig, axes = plt.subplots(nrows=5, ncols=1, figsize = (8, 6))
+                    #axes[0].imshow(occlusion_scores_eminus)
+                    #plt.savefig("image/%i_%i_%i_occlusion_plane_eminus_%i"%(ev_pix.run(), ev_pix.subrun(), ev_pix.event(), plane))
 
                 '''
                 print test.shape
@@ -323,7 +301,7 @@ if __name__ == '__main__':
 
     CFG = os.path.join(BASE_PATH,"cfg","simple_config.cfg")
 
-    with tf.device('/gpu:0'):
+    with tf.device('/cpu:0'):
         main(VTX_FILE,OUT_DIR,CFG)
 
     sys.exit(0)
