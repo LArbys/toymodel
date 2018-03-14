@@ -161,27 +161,37 @@ def main(VTX_FILE,OUT_DIR,CFG):
 
                 img_arr = image_modify(img, cfg)
                 
-                ######## Occlusion Analysis
+                ######## Occlusion Analysis Start
+                do_occlusion = False
+                if (do_occlusion):
                 
-                stride = 3                 
+                    stride = 3                 
                 
-                occlusion_scores_eminus = np.zeros(shape = [cfg.xdim-stride+1, cfg.ydim-stride +1])
-                 
-                img_ndarray = larcv.as_ndarray(img)
+                    occlusion_scores_eminus  = np.zeros(shape = [cfg.xdim-stride+1, cfg.ydim-stride +1])
+                    occlusion_scores_gamma   = np.zeros(shape = [cfg.xdim-stride+1, cfg.ydim-stride +1])
+                    occlusion_scores_muon    = np.zeros(shape = [cfg.xdim-stride+1, cfg.ydim-stride +1])
+                    occlusion_scores_piminus = np.zeros(shape = [cfg.xdim-stride+1, cfg.ydim-stride +1])
+                    occlusion_scores_proton  = np.zeros(shape = [cfg.xdim-stride+1, cfg.ydim-stride +1])
+                    
+                    img_ndarray = larcv.as_ndarray(img)
                 
-                for y in xrange(cfg.ydim - stride +1):
-                    print 'y',y,'/',cfg.ydim - stride
-                    for x in xrange(cfg.xdim - stride +1):
-                        print 'y',y,'/', cfg.ydim - stride ,'x',x,'/', cfg.xdim - stride
-                        test = img_ndarray.copy()
-                        for s in xrange(stride):
-                            test[y+s,x:x+stride]  = [1,1,1]
-                            score_vv = sess.run(sigmoid,feed_dict={data_tensor: img_arr})
-                            occlusion_scores_eminus[x, y] = score_vv[0][0]
+                    for y in xrange(cfg.ydim - stride +1):
+                        print 'y',y,'/',cfg.ydim - stride
+                        for x in xrange(cfg.xdim - stride +1):
+                            print 'y',y,'/', cfg.ydim - stride ,'x',x,'/', cfg.xdim - stride
+                            test = img_ndarray.copy()
+                            for s in xrange(stride):
+                                test[y+s,x:x+stride]  = [1,1,1]
+                                score_vv = sess.run(sigmoid,feed_dict={data_tensor: img_arr})
+                                occlusion_scores_eminus[x, y]  = score_vv[0][0]
+                                occlusion_scores_gamma[x, y]   = score_vv[0][1]
+                                occlusion_scores_muon[x, y]    = score_vv[0][2]
+                                occlusion_scores_piminus[x, y] = score_vv[0][3]
+                                occlusion_scores_proton[x, y]  = score_vv[0][4]
                 
-                fig, ax = plt.subplots(nrows=1, ncols=1, figsize = (8, 6))
-                ax.imshow(occlusion)
-                plt.savefig("image/%i_%i_%i_occlusion_plane_eminus_%i"%(ev_pix.run(), ev_pix.subrun(), ev_pix.event(), plane))
+                    fig, ax = plt.subplots(nrows=1, ncols=1, figsize = (8, 6))
+                    ax.imshow(occlusion)
+                    plt.savefig("image/%i_%i_%i_occlusion_plane_eminus_%i"%(ev_pix.run(), ev_pix.subrun(), ev_pix.event(), plane))
 
                 '''
                 print test.shape
@@ -190,7 +200,7 @@ def main(VTX_FILE,OUT_DIR,CFG):
                 print 510, test[510]
                 print 511, test[511]
                 '''
-                ######## Occlusion Analysis
+                ######## Occlusion Analysis End
                 '''
                 img_arr = np.array(img.as_vector())
                 img_arr = np.where(img_arr<cfg.adc_lo,         0,img_arr)
