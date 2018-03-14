@@ -4,7 +4,6 @@ from larcv import larcv
 import numpy as np
 import tensorflow as tf
 
-
 BASE_PATH = os.path.realpath(__file__)
 BASE_PATH = os.path.dirname(BASE_PATH)
 sys.path.insert(0,BASE_PATH)
@@ -174,13 +173,18 @@ def main(VTX_FILE,OUT_DIR,CFG):
                     for x in xrange(cfg.xdim - stride +1):
                         print 'y',y,'/', cfg.ydim - stride ,'x',x,'/', cfg.xdim - stride
                         test = img_ndarray.copy()
+                        print 'no occlusion',test
                         for s in xrange(stride):
-                            test[y+s,x:x+stride]  = [1,1,1]
-                            score_vv = sess.run(sigmoid,feed_dict={data_tensor: img_arr})
-                            occlusion_scores_eminus[x, y] = score_vv[0][0]
+                            test[y+s,x:x+stride]  = [0,0,0]
+                        print 'occlusion',test
+                        score_vv = sess.run(sigmoid,feed_dict={data_tensor: img_arr})
+                        occlusion_scores_eminus[x, y] = score_vv[0][0]
+                            
+                
+                np.savetxt('occlusion.txt', occlusion_scores_eminus)
                 
                 fig, ax = plt.subplots(nrows=1, ncols=1, figsize = (8, 6))
-                ax.imshow(occlusion)
+                ax.imshow(occlusion_scores_eminus)
                 plt.savefig("image/%i_%i_%i_occlusion_plane_eminus_%i"%(ev_pix.run(), ev_pix.subrun(), ev_pix.event(), plane))
 
                 '''
@@ -293,7 +297,7 @@ if __name__ == '__main__':
 
     CFG = os.path.join(BASE_PATH,"cfg","simple_config.cfg")
 
-    with tf.device('/cpu:0'):
+    with tf.device('/gpu:0'):
         main(VTX_FILE,OUT_DIR,CFG)
 
     sys.exit(0)
