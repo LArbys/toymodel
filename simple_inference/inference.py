@@ -4,7 +4,6 @@ from larcv import larcv
 import numpy as np
 import tensorflow as tf
 
-
 BASE_PATH = os.path.realpath(__file__)
 BASE_PATH = os.path.dirname(BASE_PATH)
 sys.path.insert(0,BASE_PATH)
@@ -175,6 +174,7 @@ def main(VTX_FILE,OUT_DIR,CFG):
                     
                     img_ndarray = larcv.as_ndarray(img)
                 
+<<<<<<< HEAD
                     for y in xrange(cfg.ydim - stride +1):
                         print 'y',y,'/',cfg.ydim - stride
                         for x in xrange(cfg.xdim - stride +1):
@@ -192,6 +192,26 @@ def main(VTX_FILE,OUT_DIR,CFG):
                     fig, ax = plt.subplots(nrows=1, ncols=1, figsize = (8, 6))
                     ax.imshow(occlusion)
                     plt.savefig("image/%i_%i_%i_occlusion_plane_eminus_%i"%(ev_pix.run(), ev_pix.subrun(), ev_pix.event(), plane))
+=======
+                for y in xrange(cfg.ydim - stride +1):
+                    print 'y',y,'/',cfg.ydim - stride
+                    for x in xrange(cfg.xdim - stride +1):
+                        print 'y',y,'/', cfg.ydim - stride ,'x',x,'/', cfg.xdim - stride
+                        test = img_ndarray.copy()
+                        print 'no occlusion',test
+                        for s in xrange(stride):
+                            test[y+s,x:x+stride]  = [0,0,0]
+                        print 'occlusion',test
+                        score_vv = sess.run(sigmoid,feed_dict={data_tensor: img_arr})
+                        occlusion_scores_eminus[x, y] = score_vv[0][0]
+                            
+                
+                np.savetxt('occlusion.txt', occlusion_scores_eminus)
+                
+                fig, ax = plt.subplots(nrows=1, ncols=1, figsize = (8, 6))
+                ax.imshow(occlusion_scores_eminus)
+                plt.savefig("image/%i_%i_%i_occlusion_plane_eminus_%i"%(ev_pix.run(), ev_pix.subrun(), ev_pix.event(), plane))
+>>>>>>> 11baef66a0e316b0e8c98bbc7c5780c7b35337e0
 
                 '''
                 print test.shape
@@ -303,7 +323,7 @@ if __name__ == '__main__':
 
     CFG = os.path.join(BASE_PATH,"cfg","simple_config.cfg")
 
-    with tf.device('/cpu:0'):
+    with tf.device('/gpu:0'):
         main(VTX_FILE,OUT_DIR,CFG)
 
     sys.exit(0)
