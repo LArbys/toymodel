@@ -29,7 +29,7 @@ def image_modify (img, cfg):
     
     return img_arr
 
-def main(VTX_FILE,OUT_DIR,CFG):
+def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
     #
     # initialize
     #
@@ -80,6 +80,7 @@ def main(VTX_FILE,OUT_DIR,CFG):
     # oiom.initialize()
 
     iom  = larcv.IOManager(larcv.IOManager.kREAD)
+    iom.add_in_file(IMAGE_FILE)
     iom.add_in_file(VTX_FILE)
     iom.initialize()
 
@@ -312,20 +313,22 @@ def main(VTX_FILE,OUT_DIR,CFG):
 
 if __name__ == '__main__':
     
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         print
-        print "\tVTX_FILE = str(sys.argv[1])"
-        print "\tOUT_DIR  = str(sys.argv[2])"
+        print "\tIMAGE_FILE = str(sys.argv[1])"
+        print "\tVTX_FILE = str(sys.argv[2])"
+        print "\tOUT_DIR  = str(sys.argv[3])"
         print 
         sys.exit(1)
     
-    VTX_FILE = str(sys.argv[1])
-    OUT_DIR  = str(sys.argv[2])
+    IMAGE_FILE = str(sys.argv[1]) 
+    VTX_FILE = str(sys.argv[2])
+    OUT_DIR  = str(sys.argv[3])
 
     CFG = os.path.join(BASE_PATH,"cfg","simple_config.cfg")
 
     with tf.device('/cpu:0'):
-        main(VTX_FILE,OUT_DIR,CFG)
+        main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG)
 
     sys.exit(0)
 
