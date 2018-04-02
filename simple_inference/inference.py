@@ -86,7 +86,7 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
 
     for entry in xrange(iom.get_n_entries()):
         print "@entry={}".format(entry)
-
+        
         iom.read_entry(entry)
 
         ev_pgr = iom.get_data(larcv.kProductPGraph,"test")
@@ -210,6 +210,7 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
             
                 score_vv = sess.run(sigmoid,feed_dict={data_tensor: img_arr})
                 score_v  = score_vv[0]
+                print 'score_v, ',score_v
 
                 rd.eminus_score[plane] = score_v[0]
                 rd.gamma_score[plane]  = score_v[1]
@@ -235,16 +236,18 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
                 if (plane == 1): meta_origin_y = min(meta_origin_y, 8448-256*6)
                 if (plane == 2): meta_origin_y = min(meta_origin_y, 8448-256*6)
                 '''
-                meta_origin_x = max(x_2d-128, 0)
-                if (plane == 0): meta_origin_x = min(meta_origin_x, 3456-128)
-                if (plane == 1): meta_origin_x = min(meta_origin_x, 3456-128)
-                if (plane == 2): meta_origin_x = min(meta_origin_x, 3456-128)
+                meta_origin_x = max(x_2d-128, 256)
+                if (plane == 0): meta_origin_x = min(meta_origin_x, 3456-256)
+                if (plane == 1): meta_origin_x = min(meta_origin_x, 3456-256)
+                if (plane == 2): meta_origin_x = min(meta_origin_x, 3456-256)
+                print meta_origin_x
+
                 meta_origin_y = max(y_2d*6+2400 + 128 *6, 5472)
-                if (plane == 0): meta_origin_y = min(meta_origin_y, 8448-128*6)
-                if (plane == 1): meta_origin_y = min(meta_origin_y, 8448-128*6)
-                if (plane == 2): meta_origin_y = min(meta_origin_y, 8448-128*6)
+                if (plane == 0): meta_origin_y = min(meta_origin_y, 8448-128*6-1)
+                if (plane == 1): meta_origin_y = min(meta_origin_y, 8448-128*6-1)
+                if (plane == 2): meta_origin_y = min(meta_origin_y, 8448-128*6-1)
                 meta_crop.reset_origin(meta_origin_x, meta_origin_y)
-                
+                print meta_origin_y
                 #Plot the image from vertex
                 '''
                 print 'Vertex Meta'
@@ -274,8 +277,9 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
                 print test_meta.tr().x,test_meta.tr().y
                 print test_meta.br().x,test_meta.br().y
                 '''
-                
+                print entry
                 img_vtx = larcv.as_ndarray(img_vtx)
+                print 'shape, ',img_vtx.shape
                 img_vtx = np.pad(img_vtx, 128, pad_with)
                 img_vtx = np.where(img_vtx<cfg.adc_lo,         0,img_vtx)
                 img_vtx = np.where(img_vtx>cfg.adc_hi,cfg.adc_hi,img_vtx)
@@ -284,7 +288,7 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
                 #print img_vtx_arr.shape
                 score_vv_vtx = sess.run(sigmoid,feed_dict={data_tensor: img_vtx_arr})
                 score_v_vtx  = score_vv_vtx[0]
-                print score_v_vtx
+                print 'score_v_vtx',score_v_vtx
                 p_type = {0:"eminus", 1:"gamme", 2:"muon", 3:"piminus",4:"proton"}
                 
                 #for x in xrange(5): print p_type[x], score_v_vtx[x]
