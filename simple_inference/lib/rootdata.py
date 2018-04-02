@@ -77,8 +77,8 @@ class ROOTData:
         tree.Branch("pion_score"  , self.pion_score)
         tree.Branch("proton_score", self.proton_score)
 
-        tree.Branch("eminus_score_vtx", self.eminus_score)
-        tree.Branch("gamma_score_vtx" , self.gamma_score) 
-        tree.Branch("muon_score_vtx"  , self.muon_score) 
-        tree.Branch("pion_score_vtx"  , self.pion_score)
-        tree.Branch("proton_score_vtx", self.proton_score)
+        tree.Branch("eminus_score_vtx", self.eminus_score_vtx)
+        tree.Branch("gamma_score_vtx" , self.gamma_score_vtx) 
+        tree.Branch("muon_score_vtx"  , self.muon_score_vtx) 
+        tree.Branch("pion_score_vtx"  , self.pion_score_vtx)
+        tree.Branch("proton_score_vtx", self.proton_score_vtx)
