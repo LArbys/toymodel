@@ -19,9 +19,10 @@ def main(MPID_FILE,OUT_DIR, CFG):
 
     rd = ROOTData()
 
-    file_path = os.path.join(BASE_PATH,MPID_FILE)
+    file_path = MPID_FILE
     print file_path
-    f=root.TFile(file_path)
+    f=root.TFile.Open(file_path)
+    print f
     tree=f.Get("multipid_tree")
 
     from toynet import toy_perceptron

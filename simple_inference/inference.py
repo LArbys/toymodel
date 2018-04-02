@@ -111,7 +111,7 @@ def main(VTX_FILE,OUT_DIR,CFG):
             y_2d_plane_0 = ROOT.Double()
 
             for plane in xrange(3):
-                if plane != 1: continue
+                if plane == 0: continue
                 print "@plane=%d" % plane
 
                 ### Get 2D vertex Image

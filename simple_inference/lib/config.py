@@ -5,6 +5,7 @@ class config_loader(object):
             data = f.read()
         data = data.split("\n")
         for line in data:
+	    if line == "": continue
             SS = "self." + line
             print SS
             exec(SS)
