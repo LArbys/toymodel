@@ -132,7 +132,7 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
                 whole_img = ev_img.at(plane)
                 
                 larcv.Project3D(whole_img.meta(), x, y, z, 0.0, plane, x_2d, y_2d)
-                print 'x2d, ', x_2d, 'y2d, ',y_2d
+                #print 'x2d, ', x_2d, 'y2d, ',y_2d
                 
                 if (plane == 0) : y_2d_plane_0 = y_2d
                 else : y_2d = y_2d_plane_0
@@ -201,7 +201,7 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
                     axes[0].imshow(occlusion_scores_eminus)
                     plt.savefig("image/%i_%i_%i_occlusion_plane_eminus_%i"%(ev_pix.run(), ev_pix.subrun(), ev_pix.event(), plane))
                     '''
-                '''
+                
                 img_arr = np.array(img.as_vector())
                 img_arr = np.where(img_arr<cfg.adc_lo,         0,img_arr)
                 img_arr = np.where(img_arr>cfg.adc_hi,cfg.adc_hi,img_arr)
@@ -216,7 +216,7 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
                 rd.muon_score[plane]   = score_v[2]
                 rd.pion_score[plane]   = score_v[3]
                 rd.proton_score[plane] = score_v[4]
-                '''
+                
                 ###### Adding scores for vertex images
                 #print x_2d, y_2d , 'x2d, y2d'
                 meta_crop = larcv.ImageMeta(256,256*6,
@@ -284,7 +284,7 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
                 #print img_vtx_arr.shape
                 score_vv_vtx = sess.run(sigmoid,feed_dict={data_tensor: img_vtx_arr})
                 score_v_vtx  = score_vv_vtx[0]
-                
+                print score_v_vtx
                 p_type = {0:"eminus", 1:"gamme", 2:"muon", 3:"piminus",4:"proton"}
                 
                 #for x in xrange(5): print p_type[x], score_v_vtx[x]
@@ -296,7 +296,7 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
                 rd.proton_score_vtx[plane] = score_v_vtx[4]
                 
                 ######
-
+                
             tree.Fill()
             rd.reset_vertex()
         
