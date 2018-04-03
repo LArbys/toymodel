@@ -53,8 +53,10 @@ def main(MPID_FILE,OUT_DIR, CFG):
             muon_score    = entry.muon_score[plane]
             pion_score    = entry.pion_score[plane]
             proton_score  = entry.proton_score[plane]
-            five_scores = np.array([[eminus_score,gamma_score,muon_score,pion_score,proton_score]])
-        
+            
+            five_scores = np.array([[proton_score,eminus_score,muon_score,gamma_score,pion_score]])
+            print five_scores
+
             sess = tf.InteractiveSession()
             sess.run(tf.global_variables_initializer())
             reader = tf.train.Saver()
