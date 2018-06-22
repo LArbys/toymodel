@@ -29,12 +29,6 @@ class ROOTData(object):
         self.pion_score_vtx    = ROOT.std.vector("float")(3,kINVALID_FLOAT)
         self.proton_score_vtx  = ROOT.std.vector("float")(3,kINVALID_FLOAT)
 
-        self.eminus_multiplicity  = ROOT.std.vector("float")(3,kINVALID_FLOAT)
-        self.gamma_multiplicity   = ROOT.std.vector("float")(3,kINVALID_FLOAT)
-        self.muon_multiplicity    = ROOT.std.vector("float")(3,kINVALID_FLOAT)
-        self.pion_multiplicity    = ROOT.std.vector("float")(3,kINVALID_FLOAT)
-        self.proton_multiplicity  = ROOT.std.vector("float")(3,kINVALID_FLOAT)
-
     def reset_event(self):
         self.run[0]     = kINVALID_INT
         self.subrun[0]  = kINVALID_INT
@@ -59,11 +53,6 @@ class ROOTData(object):
             self.muon_score_vtx[pl]   = kINVALID_FLOAT
             self.pion_score_vtx[pl]   = kINVALID_FLOAT
             self.proton_score_vtx[pl] = kINVALID_FLOAT 
-            self.eminus_multiplicity[pl] = kINVALID_FLOAT
-            self.gamma_multiplicity[pl]  = kINVALID_FLOAT
-            self.muon_multiplicity[pl]   = kINVALID_FLOAT
-            self.pion_multiplicity[pl]   = kINVALID_FLOAT
-            self.proton_multiplicity[pl] = kINVALID_FLOAT 
     def reset(self):
         self.reset_event()
         self.reset_vertex()
@@ -93,8 +82,3 @@ class ROOTData(object):
         tree.Branch("pion_score_vtx"  , self.pion_score_vtx)
         tree.Branch("proton_score_vtx", self.proton_score_vtx)
         
-        tree.Branch("eminus_multiplicity", self.eminus_multiplicity)
-        tree.Branch("gamma_multiplicity" , self.gamma_multiplicity) 
-        tree.Branch("muon_multiplicity"  , self.muon_multiplicity) 
-        tree.Branch("pion_multiplicity"  , self.pion_multiplicity)
-        tree.Branch("proton_multiplicity", self.proton_multiplicity)
