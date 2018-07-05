@@ -47,7 +47,7 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
     FOUT = os.path.join(OUT_DIR,"multiplicity_out_%d.root" % NUM)
     tfile = ROOT.TFile.Open(FOUT,"RECREATE")
     tfile.cd()
-    print "OPEN %s"%FOUT
+    #print "OPEN %s"%FOUT
 
     tree  = ROOT.TTree("multiplicity_tree","")
     rd.init_tree(tree)
@@ -90,7 +90,7 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
 
     for entry in xrange(iom.get_n_entries()):
         #if (entry!=26): continue
-        print "@entry={}".format(entry)
+        #print "@entry={}".format(entry)
 
         iom.read_entry(entry)
 
@@ -98,8 +98,8 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
         ev_pix = iom.get_data(larcv.kProductPixel2D,"test_super_img")
         ev_img = iom.get_data(larcv.kProductImage2D,"wire")
         
-        print '========================>>>>>>>>>>>>>>>>>>>>'
-        print 'run, subrun, event',ev_pix.run(),ev_pix.subrun(),ev_pix.event()
+        #print '========================>>>>>>>>>>>>>>>>>>>>'
+        #print 'run, subrun, event',ev_pix.run(),ev_pix.subrun(),ev_pix.event()
 
         rd.run[0]    = int(ev_pix.run())
         rd.subrun[0] = int(ev_pix.subrun())
@@ -108,12 +108,12 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
 
         rd.num_vertex[0] = int(ev_pgr.PGraphArray().size())
 
-        print 'num of vertices, ',rd.num_vertex[0]
-        print 'pgrapgh size, ',int(ev_pgr.PGraphArray().size())
+        #print 'num of vertices, ',rd.num_vertex[0]
+        #print 'pgrapgh size, ',int(ev_pgr.PGraphArray().size())
 
         
         for ix,pgraph in enumerate(ev_pgr.PGraphArray()):
-            print "@pgid=%d" % ix
+            #print "@pgid=%d" % ix
             if (ix != 2): continue
             rd.vtxid[0] = int(ix)
 
@@ -133,7 +133,7 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
                 
                 if plane == 1: continue
                         
-                print "@plane=%d" % plane
+                #print "@plane=%d" % plane
 
                 ### Get 2D vertex Image
                 
@@ -193,19 +193,19 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
                     y = 0
                     #for y in xrange(cfg.ydim - stride +1):
                     while y < 500:
-                        print 'y',y,'/',cfg.ydim - stride
+                        #print 'y',y,'/',cfg.ydim - stride
                         #for x in xrange(cfg.xdim - stride +1):
                         x = 0
                         while x < 500:
-                            print 'y',y,'/', cfg.ydim - stride ,'x',x,'/', cfg.xdim - stride
+                            #print 'y',y,'/', cfg.ydim - stride ,'x',x,'/', cfg.xdim - stride
                             test = img_ndarray.copy()
                             #for s in xrange(stride):
-                            #print test[y:y+stride,x:x+stride].shape
-                            #print np.zeros((stride, stride)).shape
+                            ##print test[y:y+stride,x:x+stride].shape
+                            ##print np.zeros((stride, stride)).shape
                             test[y:y+stride,x:x+stride]  = np.zeros((stride, stride))
                             test = larcv.as_image2d(test)
                             test = image_modify(test,cfg)
-                            print np.mean(test), np.mean(img_arr)
+                            #print np.mean(test), np.mean(img_arr)
                             
                             test_ = test.reshape(512,512)
                             test_ = test_.T
@@ -220,9 +220,9 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
                             '''
                             test = test_.reshape(1,512*512)
                             score_vv = sess.run(sigmoid,feed_dict={data_tensor: test})
-                            print score_vv[0]
-                            #score_vv = sess.run(sigmoid,feed_dict={data_tensor: img_arr})
                             #print score_vv[0]
+                            #score_vv = sess.run(sigmoid,feed_dict={data_tensor: img_arr})
+                            ##print score_vv[0]
                             sys.stdout.flush()
                             x+=1
                             for idx in xrange(5):
@@ -246,7 +246,7 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
                 multiplicity_vv = sess.run(sigmoid,feed_dict={data_tensor: img_arr})
                 multiplicity_v  = multiplicity_vv[0]
 
-                print 'multiplicites are  ',multiplicity_v
+                #print 'multiplicites are  ',multiplicity_v
                 
 
                 rd.eminus_multiplicity[plane] = np.argmax(multiplicity_v[0:5])
@@ -254,6 +254,12 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
                 rd.muon_multiplicity[plane]   = np.argmax(multiplicity_v[10:15])
                 rd.pion_multiplicity[plane]   = np.argmax(multiplicity_v[15:20])
                 rd.proton_multiplicity[plane] = np.argmax(multiplicity_v[20:25])
+
+                rd.eminus_multiplicity_score[plane] = np.max(multiplicity_v[0:5])
+                rd.gamma_multiplicity_score[plane]  = np.max(multiplicity_v[5:10])
+                rd.muon_multiplicity_score[plane]   = np.max(multiplicity_v[10:15])
+                rd.pion_multiplicity_score[plane]   = np.max(multiplicity_v[15:20])
+                rd.proton_multiplicity_score[plane] = np.max(multiplicity_v[20:25])
 
 
                 ###### Adding scores for vertex images
