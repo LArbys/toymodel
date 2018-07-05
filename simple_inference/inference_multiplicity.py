@@ -249,11 +249,11 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
                 print 'multiplicites are  ',multiplicity_v
                 
 
-                rd.eminus_multiplicity[plane] = np.max(multiplicity_v[0:5])
-                rd.gamma_multiplicity[plane]  = np.max(multiplicity_v[5:10])
-                rd.muon_multiplicity[plane]   = np.max(multiplicity_v[10:15])
-                rd.pion_multiplicity[plane]   = np.max(multiplicity_v[15:20])
-                rd.proton_multiplicity[plane] = np.max(multiplicity_v[20:25])
+                rd.eminus_multiplicity[plane] = np.argmax(multiplicity_v[0:5])
+                rd.gamma_multiplicity[plane]  = np.argmax(multiplicity_v[5:10])
+                rd.muon_multiplicity[plane]   = np.argmax(multiplicity_v[10:15])
+                rd.pion_multiplicity[plane]   = np.argmax(multiplicity_v[15:20])
+                rd.proton_multiplicity[plane] = np.argmax(multiplicity_v[20:25])
 
 
                 ###### Adding scores for vertex images
