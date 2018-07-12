@@ -17,11 +17,29 @@ class ROOTData(object):
         
         self.inferred = array( 'i', [ kINVALID_INT ] )
 
-        self.eminus_multiplicity  = ROOT.std.vector("float")(3,kINVALID_FLOAT)
-        self.gamma_multiplicity   = ROOT.std.vector("float")(3,kINVALID_FLOAT)
-        self.muon_multiplicity    = ROOT.std.vector("float")(3,kINVALID_FLOAT)
-        self.pion_multiplicity    = ROOT.std.vector("float")(3,kINVALID_FLOAT)
-        self.proton_multiplicity  = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.eminus_multiplicity_pix  = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.gamma_multiplicity_pix   = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.muon_multiplicity_pix    = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.pion_multiplicity_pix    = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.proton_multiplicity_pix  = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+
+        self.eminus_multiplicity_score_pix  = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.gamma_multiplicity_score_pix   = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.muon_multiplicity_score_pix    = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.pion_multiplicity_score_pix    = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.proton_multiplicity_score_pix  = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+
+        self.eminus_multiplicity_int  = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.gamma_multiplicity_int   = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.muon_multiplicity_int    = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.pion_multiplicity_int    = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.proton_multiplicity_int  = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+
+        self.eminus_multiplicity_score_int  = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.gamma_multiplicity_score_int   = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.muon_multiplicity_score_int    = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.pion_multiplicity_score_int    = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.proton_multiplicity_score_int  = ROOT.std.vector("float")(3,kINVALID_FLOAT)
 
     def reset_event(self):
         self.run[0]     = kINVALID_INT
@@ -37,11 +55,28 @@ class ROOTData(object):
         self.inferred[0] = kINVALID_INT
 
         for pl in xrange(3):
-            self.eminus_multiplicity[pl] = kINVALID_FLOAT
-            self.gamma_multiplicity[pl]  = kINVALID_FLOAT
-            self.muon_multiplicity[pl]   = kINVALID_FLOAT
-            self.pion_multiplicity[pl]   = kINVALID_FLOAT
-            self.proton_multiplicity[pl] = kINVALID_FLOAT 
+            self.eminus_multiplicity_pix[pl]       = kINVALID_FLOAT
+            self.gamma_multiplicity_pix[pl]        = kINVALID_FLOAT
+            self.muon_multiplicity_pix[pl]         = kINVALID_FLOAT
+            self.pion_multiplicity_pix[pl]         = kINVALID_FLOAT
+            self.proton_multiplicity_pix[pl]       = kINVALID_FLOAT 
+            self.eminus_multiplicity_score_pix[pl] = kINVALID_FLOAT
+            self.gamma_multiplicity_score_pix[pl]  = kINVALID_FLOAT
+            self.muon_multiplicity_score_pix[pl]   = kINVALID_FLOAT
+            self.pion_multiplicity_score_pix[pl]   = kINVALID_FLOAT
+            self.proton_multiplicity_score_pix[pl] = kINVALID_FLOAT 
+
+            self.eminus_multiplicity_int[pl]       = kINVALID_FLOAT
+            self.gamma_multiplicity_int[pl]        = kINVALID_FLOAT
+            self.muon_multiplicity_int[pl]         = kINVALID_FLOAT
+            self.pion_multiplicity_int[pl]         = kINVALID_FLOAT
+            self.proton_multiplicity_int[pl]       = kINVALID_FLOAT 
+            self.eminus_multiplicity_score_int[pl] = kINVALID_FLOAT
+            self.gamma_multiplicity_score_int[pl]  = kINVALID_FLOAT
+            self.muon_multiplicity_score_int[pl]   = kINVALID_FLOAT
+            self.pion_multiplicity_score_int[pl]   = kINVALID_FLOAT
+            self.proton_multiplicity_score_int[pl] = kINVALID_FLOAT 
+
     def reset(self):
         self.reset_event()
         self.reset_vertex()
@@ -59,8 +94,28 @@ class ROOTData(object):
 
         tree.Branch("inferred"   , self.inferred  , "inferred/I")
 
-        tree.Branch("eminus_multiplicity", self.eminus_multiplicity)
-        tree.Branch("gamma_multiplicity" , self.gamma_multiplicity) 
-        tree.Branch("muon_multiplicity"  , self.muon_multiplicity) 
-        tree.Branch("pion_multiplicity"  , self.pion_multiplicity)
-        tree.Branch("proton_multiplicity", self.proton_multiplicity)
+        tree.Branch("eminus_multiplicity_pix", self.eminus_multiplicity_pix)
+        tree.Branch("gamma_multiplicity_pix" , self.gamma_multiplicity_pix) 
+        tree.Branch("muon_multiplicity_pix"  , self.muon_multiplicity_pix) 
+        tree.Branch("pion_multiplicity_pix"  , self.pion_multiplicity_pix)
+        tree.Branch("proton_multiplicity_pix", self.proton_multiplicity_pix)
+
+        tree.Branch("eminus_multiplicity_score_pix", self.eminus_multiplicity_score_pix)
+        tree.Branch("gamma_multiplicity_score_pix" , self.gamma_multiplicity_score_pix) 
+        tree.Branch("muon_multiplicity_score_pix"  , self.muon_multiplicity_score_pix) 
+        tree.Branch("pion_multiplicity_score_pix"  , self.pion_multiplicity_score_pix)
+        tree.Branch("proton_multiplicity_score_pix", self.proton_multiplicity_score_pix)
+
+        tree.Branch("eminus_multiplicity_int", self.eminus_multiplicity_int)
+        tree.Branch("gamma_multiplicity_int" , self.gamma_multiplicity_int) 
+        tree.Branch("muon_multiplicity_int"  , self.muon_multiplicity_int) 
+        tree.Branch("pion_multiplicity_int"  , self.pion_multiplicity_int)
+        tree.Branch("proton_multiplicity_int", self.proton_multiplicity_int)
+
+        tree.Branch("eminus_multiplicity_score_int", self.eminus_multiplicity_score_int)
+        tree.Branch("gamma_multiplicity_score_int" , self.gamma_multiplicity_score_int) 
+        tree.Branch("muon_multiplicity_score_int"  , self.muon_multiplicity_score_int) 
+        tree.Branch("pion_multiplicity_score_int"  , self.pion_multiplicity_score_int)
+        tree.Branch("proton_multiplicity_score_int", self.proton_multiplicity_score_int)
+
+

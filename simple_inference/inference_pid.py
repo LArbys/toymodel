@@ -15,8 +15,8 @@ from lib.rootdata_pid import ROOTData
 
 larcv.LArbysLoader()
 
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="2"
+#os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+#os.environ["CUDA_VISIBLE_DEVICES"]="2"
 
 p_type = {0:"eminus", 1:"gamma", 2:"muon", 3:"piminus",4:"proton"}
 
@@ -44,7 +44,7 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
     rd = ROOTData()
 
     NUM = int(os.path.basename(VTX_FILE).split(".")[0].split("_")[-1])
-    FOUT = os.path.join(OUT_DIR,"multipid_out_%d.root" % NUM)
+    FOUT = os.path.join(OUT_DIR,"multipid_out_%04d.root" % NUM)
     #FOUT = os.path.join(OUT_DIR,"multipid_out_04.root")
     tfile = ROOT.TFile.Open(FOUT,"RECREATE")
     tfile.cd()
@@ -90,14 +90,16 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
     iom.initialize()
 
     for entry in xrange(iom.get_n_entries()):
-        if (entry!=26): continue
+        #if (entry!=26): continue
         print "@entry={}".format(entry)
 
         iom.read_entry(entry)
 
-        ev_pgr = iom.get_data(larcv.kProductPGraph,"test")
-        ev_pix = iom.get_data(larcv.kProductPixel2D,"test_super_img")
-        ev_img = iom.get_data(larcv.kProductImage2D,"wire")
+        ev_pgr = iom.get_data(larcv.kProductPGraph,"inter_par")
+        ev_par = iom.get_data(larcv.kProductPixel2D,"inter_par_pixel")
+        ev_pix = iom.get_data(larcv.kProductPixel2D,"inter_img_pixel")
+        ev_int = iom.get_data(larcv.kProductPixel2D,"inter_int_pixel")
+        #ev_img = iom.get_data(larcv.kProductImage2D,"wire")
         
         print '========================>>>>>>>>>>>>>>>>>>>>'
         print 'run, subrun, event',ev_pix.run(),ev_pix.subrun(),ev_pix.event()
@@ -111,45 +113,53 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
 
         print 'num of vertices, ',rd.num_vertex[0]
         print 'pgrapgh size, ',int(ev_pgr.PGraphArray().size())
-
         
         for ix,pgraph in enumerate(ev_pgr.PGraphArray()):
             print "@pgid=%d" % ix
-            if (ix != 2): continue
+            #if (ix != 2): continue
             rd.vtxid[0] = int(ix)
+   
+            pgr = ev_pgr.PGraphArray().at(ix)
+            cindex_v = np.array(pgr.ClusterIndexArray())
+            
+            pixel2d_par_vv = ev_par.Pixel2DClusterArray()
+            pixel2d_pix_vv = ev_pix.Pixel2DClusterArray()
+            pixel2d_int_vv = ev_int.Pixel2DClusterArray()
 
-            pixel2d_vv = ev_pix.Pixel2DClusterArray()
-            parid = pgraph.ClusterIndexArray().front()
-            roi0 = pgraph.ParticleArray().front()
+            #parid = pgraph.ClusterIndexArray().front()
+            #roi0 = pgraph.ParticleArray().front()
 
-            x = roi0.X()
-            y = roi0.Y()
-            z = roi0.Z()
+            #x = roi0.X()
+            #y = roi0.Y()
+            #z = roi0.Z()
 
-            y_2d_plane_0 = ROOT.Double()
+            #y_2d_plane_0 = ROOT.Double()
 
             for plane in xrange(3):
-                
-                if plane == 0: continue
-                
-                if plane == 1: continue
-                        
                 print "@plane=%d" % plane
-
+                
+                if pixel2d_par_vv.size() != 0:
+                    rd.npar[plane] = 0
+                    pixel2d_par_v = pixel2d_par_vv.at(plane)
+                    for cidx in cindex_v:
+			pixel2d_par = pixel2d_par_v.at(cidx)
+			if pixel2d_par.size()>0:
+			    rd.npar[plane] += 1;
+				                  
                 ### Get 2D vertex Image
                 
-                meta = roi0.BB(plane)
+                #meta = roi0.BB(plane)
 
-                x_2d = ROOT.Double()
-                y_2d = ROOT.Double()
+                #x_2d = ROOT.Double()
+                #y_2d = ROOT.Double()
                 
-                whole_img = ev_img.at(plane)
+                #whole_img = ev_img.at(plane)
                 
-                larcv.Project3D(whole_img.meta(), x, y, z, 0.0, plane, x_2d, y_2d)
+                #larcv.Project3D(whole_img.meta(), x, y, z, 0.0, plane, x_2d, y_2d)
                 #print 'x2d, ', x_2d, 'y2d, ',y_2d
                 
-                if (plane == 0) : y_2d_plane_0 = y_2d
-                else : y_2d = y_2d_plane_0
+                #if (plane == 0) : y_2d_plane_0 = y_2d
+                #else : y_2d = y_2d_plane_0
                 
                 ###
                 weight_file = ""
@@ -158,17 +168,21 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
                 reader.restore(sess,weight_file)
 
                 # nothing
-                if pixel2d_vv.empty()==True: continue
+                #if pixel2d_vv.empty()==True: continue
 
-                pixel2d_v = pixel2d_vv.at(plane)
-                pixel2d = pixel2d_v.at(parid)
+                pixel2d_pix_v = pixel2d_pix_vv.at(plane)
+                pixel2d_pix = pixel2d_pix_v.at(ix)
+
+		pixel2d_int_v = pixel2d_int_vv.at(plane)
+                pixel2d_int = pixel2d_int_v.at(ix)
             
                 # nothing on this plane
-                if pixel2d.empty() == True: continue
+                #if pixel2d_pix.empty() == True: continue
 
                 rd.inferred[0] = 1
                 
-                img = larcv.cluster_to_image2d(pixel2d,cfg.xdim,cfg.ydim)
+                img_pix = larcv.cluster_to_image2d(pixel2d_pix,cfg.xdim,cfg.ydim)
+                img_int = larcv.cluster_to_image2d(pixel2d_int,cfg.xdim,cfg.ydim)
 
                 #Plot the image from pgraph
                 '''
@@ -178,7 +192,8 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
                 ax.imshow(img_vtx_nd)
                 plt.savefig("image/%i_%i_%i_graph_plane_%i"%(ev_pix.run(), ev_pix.subrun(), ev_pix.event(), plane))
                 '''
-                img_arr = image_modify(img, cfg)
+                img_pix_arr = image_modify(img_pix, cfg)
+                img_int_arr = image_modify(img_int, cfg)
                 
                 ######## Occlusion Analysis Start
                 #do_occlusion = True
@@ -238,22 +253,31 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
                     plt.savefig("image/%i_%i_%i_occlusion_plane_eminus_%i"%(ev_pix.run(), ev_pix.subrun(), ev_pix.event(), plane))
                     '''
                     
-                img_arr = np.array(img.as_vector())
-                img_arr = np.where(img_arr<cfg.adc_lo,         0,img_arr)
-                img_arr = np.where(img_arr>cfg.adc_hi,cfg.adc_hi,img_arr)
-                img_arr = img_arr.reshape(cfg.batch,img_arr.size).astype(np.float32)
+                #img_arr = np.array(img.as_vector())
+                #img_arr = np.where(img_arr<cfg.adc_lo,         0,img_arr)
+                #img_arr = np.where(img_arr>cfg.adc_hi,cfg.adc_hi,img_arr)
+                #img_arr = img_arr.reshape(cfg.batch,img_arr.size).astype(np.float32)
 
                 #score
-                score_vv = sess.run(sigmoid,feed_dict={data_tensor: img_arr})
-                score_v  = score_vv[0]
+                score_pix_vv = sess.run(sigmoid,feed_dict={data_tensor: img_pix_arr})
+                score_pix_v  = score_pix_vv[0]
 
-                print 'scores are ',score_v
+                score_int_vv = sess.run(sigmoid,feed_dict={data_tensor: img_int_arr})
+                score_int_v  = score_int_vv[0]
+
+                #print 'scores are ',score_pix_v
                 
-                rd.eminus_score[plane] = score_v[0]
-                rd.gamma_score[plane]  = score_v[1]
-                rd.muon_score[plane]   = score_v[2]
-                rd.pion_score[plane]   = score_v[3]
-                rd.proton_score[plane] = score_v[4]
+                rd.eminus_pix_score[plane] = score_pix_v[0]
+                rd.gamma_pix_score[plane]  = score_pix_v[1]
+                rd.muon_pix_score[plane]   = score_pix_v[2]
+                rd.pion_pix_score[plane]   = score_pix_v[3]
+                rd.proton_pix_score[plane] = score_pix_v[4]
+
+                rd.eminus_int_score[plane] = score_int_v[0]
+                rd.gamma_int_score[plane]  = score_int_v[1]
+                rd.muon_int_score[plane]   = score_int_v[2]
+                rd.pion_int_score[plane]   = score_int_v[3]
+                rd.proton_int_score[plane] = score_int_v[4]
 
                 '''
                 rd.eminus_score[plane] = np.max(multiplicity_v[0:5])
@@ -262,7 +286,8 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
                 rd.pion_score[plane]   = np.max(multiplicity_v[0:5])score_v[3]
                 rd.proton_score[plane] = np.max(multiplicity_v[0:5])score_v[4]
                 '''
-
+                 
+                continue
 
                 ###### Adding scores for vertex images
                 #print x_2d, y_2d , 'x2d, y2d'
@@ -362,23 +387,24 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
 
 if __name__ == '__main__':
     
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 5:
         print
         print "\tIMAGE_FILE = str(sys.argv[1])"
-        print "\tVTX_FILE = str(sys.argv[2])"
-        print "\tOUT_DIR  = str(sys.argv[3])"
+        print "\tVTX_FILE   = str(sys.argv[2])"
+        print "\tOUT_DIR    = str(sys.argv[3])"
+        print "\tCFG        = str(sys.argv[4])"
         print 
         sys.exit(1)
     
     IMAGE_FILE = str(sys.argv[1]) 
-    VTX_FILE = str(sys.argv[2])
-    OUT_DIR  = str(sys.argv[3])
+    VTX_FILE   = str(sys.argv[2])
+    OUT_DIR    = str(sys.argv[3])
+    CFG        = str(sys.argv[4])
 
-    CFG = os.path.join(BASE_PATH,"cfg","simple_config.cfg")
+    #CFG = os.path.join(BASE_PATH,"cfg","simple_config.cfg")
 
     with tf.device('/cpu:0'):
         main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG)
-
+    
+    print "DONE!"
     sys.exit(0)
-
-

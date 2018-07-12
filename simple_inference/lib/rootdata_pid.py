@@ -17,11 +17,19 @@ class ROOTData(object):
         
         self.inferred = array( 'i', [ kINVALID_INT ] )
 
-        self.eminus_score  = ROOT.std.vector("float")(3,kINVALID_FLOAT)
-        self.gamma_score   = ROOT.std.vector("float")(3,kINVALID_FLOAT)
-        self.muon_score    = ROOT.std.vector("float")(3,kINVALID_FLOAT)
-        self.pion_score    = ROOT.std.vector("float")(3,kINVALID_FLOAT)
-        self.proton_score  = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.eminus_pix_score  = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.gamma_pix_score   = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.muon_pix_score    = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.pion_pix_score    = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.proton_pix_score  = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+
+        self.eminus_int_score  = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.gamma_int_score   = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.muon_int_score    = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.pion_int_score    = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+        self.proton_int_score  = ROOT.std.vector("float")(3,kINVALID_FLOAT)
+
+	self.npar = ROOT.std.vector("float")(3,kINVALID_FLOAT)
 
         self.eminus_score_vtx  = ROOT.std.vector("float")(3,kINVALID_FLOAT)
         self.gamma_score_vtx   = ROOT.std.vector("float")(3,kINVALID_FLOAT)
@@ -42,12 +50,23 @@ class ROOTData(object):
 
         self.inferred[0] = kINVALID_INT
 
+
         for pl in xrange(3):
-            self.eminus_score[pl] = kINVALID_FLOAT
-            self.gamma_score[pl]  = kINVALID_FLOAT
-            self.muon_score[pl]   = kINVALID_FLOAT
-            self.pion_score[pl]   = kINVALID_FLOAT
-            self.proton_score[pl] = kINVALID_FLOAT 
+
+	    self.npar[pl] = kINVALID_INT;
+
+            self.eminus_pix_score[pl] = kINVALID_FLOAT
+            self.gamma_pix_score[pl]  = kINVALID_FLOAT
+            self.muon_pix_score[pl]   = kINVALID_FLOAT
+            self.pion_pix_score[pl]   = kINVALID_FLOAT
+            self.proton_pix_score[pl] = kINVALID_FLOAT 
+            
+            self.eminus_int_score[pl] = kINVALID_FLOAT
+            self.gamma_int_score[pl]  = kINVALID_FLOAT
+            self.muon_int_score[pl]   = kINVALID_FLOAT
+            self.pion_int_score[pl]   = kINVALID_FLOAT
+            self.proton_int_score[pl] = kINVALID_FLOAT
+
             self.eminus_score_vtx[pl] = kINVALID_FLOAT
             self.gamma_score_vtx[pl]  = kINVALID_FLOAT
             self.muon_score_vtx[pl]   = kINVALID_FLOAT
@@ -70,15 +89,19 @@ class ROOTData(object):
 
         tree.Branch("inferred"   , self.inferred  , "inferred/I")
 
-        tree.Branch("eminus_score", self.eminus_score)
-        tree.Branch("gamma_score" , self.gamma_score) 
-        tree.Branch("muon_score"  , self.muon_score) 
-        tree.Branch("pion_score"  , self.pion_score)
-        tree.Branch("proton_score", self.proton_score)
+        tree.Branch("eminus_pix_score", self.eminus_pix_score)
+        tree.Branch("gamma_pix_score" , self.gamma_pix_score) 
+        tree.Branch("muon_pix_score"  , self.muon_pix_score) 
+        tree.Branch("pion_pix_score"  , self.pion_pix_score)
+        tree.Branch("proton_pix_score", self.proton_pix_score)
 
-        tree.Branch("eminus_score_vtx", self.eminus_score_vtx)
-        tree.Branch("gamma_score_vtx" , self.gamma_score_vtx) 
-        tree.Branch("muon_score_vtx"  , self.muon_score_vtx) 
-        tree.Branch("pion_score_vtx"  , self.pion_score_vtx)
-        tree.Branch("proton_score_vtx", self.proton_score_vtx)
+        tree.Branch("eminus_int_score", self.eminus_int_score)
+        tree.Branch("gamma_int_score" , self.gamma_int_score)
+        tree.Branch("muon_int_score"  , self.muon_int_score)
+        tree.Branch("pion_int_score"  , self.pion_int_score)
+        tree.Branch("proton_int_score", self.proton_int_score)
+	
+        tree.Branch("npar", self.npar);
+        
+
         
