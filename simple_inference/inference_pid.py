@@ -99,7 +99,7 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
         ev_par = iom.get_data(larcv.kProductPixel2D,"inter_par_pixel")
         ev_pix = iom.get_data(larcv.kProductPixel2D,"inter_img_pixel")
         ev_int = iom.get_data(larcv.kProductPixel2D,"inter_int_pixel")
-        #ev_img = iom.get_data(larcv.kProductImage2D,"wire")
+        ev_img = iom.get_data(larcv.kProductImage2D,"wire")
         
         print '========================>>>>>>>>>>>>>>>>>>>>'
         print 'run, subrun, event',ev_pix.run(),ev_pix.subrun(),ev_pix.event()
@@ -118,20 +118,23 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
             print "@pgid=%d" % ix
             #if (ix != 2): continue
             rd.vtxid[0] = int(ix)
-   
             pgr = ev_pgr.PGraphArray().at(ix)
             cindex_v = np.array(pgr.ClusterIndexArray())
-            
             pixel2d_par_vv = ev_par.Pixel2DClusterArray()
             pixel2d_pix_vv = ev_pix.Pixel2DClusterArray()
             pixel2d_int_vv = ev_int.Pixel2DClusterArray()
-
-            #parid = pgraph.ClusterIndexArray().front()
-            #roi0 = pgraph.ParticleArray().front()
-
-            #x = roi0.X()
-            #y = roi0.Y()
-            #z = roi0.Z()
+            cluster_vv_int = ev_int.ClusterMetaArray()
+            cluster_vv_pix = ev_pix.ClusterMetaArray()
+            
+            print 'There are ', pgraph.ParticleArray().size(), 'clusters.'
+            if (not pgraph.ParticleArray().size()) : continue
+            parid = pgraph.ClusterIndexArray().front()
+            
+            roi0 = pgraph.ParticleArray().front()
+    
+            x = roi0.X()
+            y = roi0.Y()
+            z = roi0.Z()
 
             #y_2d_plane_0 = ROOT.Double()
 
@@ -150,12 +153,14 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
                 
                 #meta = roi0.BB(plane)
 
-                #x_2d = ROOT.Double()
-                #y_2d = ROOT.Double()
+                x_2d = ROOT.Double()
+                y_2d = ROOT.Double()
                 
-                #whole_img = ev_img.at(plane)
+                whole_img = ev_img.at(plane)
                 
-                #larcv.Project3D(whole_img.meta(), x, y, z, 0.0, plane, x_2d, y_2d)
+                larcv.Project3D(whole_img.meta(), x, y, z, 0.0, plane, x_2d, y_2d)
+                y_2d = y_2d*6+2400
+
                 #print 'x2d, ', x_2d, 'y2d, ',y_2d
                 
                 #if (plane == 0) : y_2d_plane_0 = y_2d
@@ -168,21 +173,61 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
                 reader.restore(sess,weight_file)
 
                 # nothing
-                #if pixel2d_vv.empty()==True: continue
+                if pixel2d_int_vv.empty()==True: continue
 
                 pixel2d_pix_v = pixel2d_pix_vv.at(plane)
                 pixel2d_pix = pixel2d_pix_v.at(ix)
-
-		pixel2d_int_v = pixel2d_int_vv.at(plane)
+                cluster_v_pix = cluster_vv_pix.at(plane)
+                cluster_pix   = cluster_v_pix.at(ix)
+		
+                pixel2d_int_v = pixel2d_int_vv.at(plane)
                 pixel2d_int = pixel2d_int_v.at(ix)
-            
+                cluster_v_int = cluster_vv_int.at(plane)
+                cluster_int   = cluster_v_int.at(ix)
                 # nothing on this plane
                 #if pixel2d_pix.empty() == True: continue
 
                 rd.inferred[0] = 1
                 
-                img_pix = larcv.cluster_to_image2d(pixel2d_pix,cfg.xdim,cfg.ydim)
-                img_int = larcv.cluster_to_image2d(pixel2d_int,cfg.xdim,cfg.ydim)
+                int_img=larcv.Image2D(512,512)
+
+                for px in pixel2d_int : 
+                    posx = cluster_int.pos_x(px.Y());
+                    posy = cluster_int.pos_y(px.X());
+                    row  = whole_img.meta().row(posy);
+                    col  = whole_img.meta().col(posx);
+                    
+                    col = (int)(posx - x_2d + 0.5)
+                    if(col < -256 or col > 255): continue
+
+                    row = (int)(posy - y_2d - 0.5)
+                    if(row < -256 or row > 255): continue
+                    
+                    #test_img.set_pixel(row+256,col+256,px.Intensity());
+                    int_img.set_pixel(col+256,row+256,px.Intensity());
+
+                pix_img=larcv.Image2D(512,512)
+
+                for px in pixel2d_pix : 
+                    posx = cluster_pix.pos_x(px.Y());
+                    posy = cluster_pix.pos_y(px.X());
+                    row  = whole_img.meta().row(posy);
+                    col  = whole_img.meta().col(posx);
+                    
+                    col = (int)(posx - x_2d + 0.5)
+                    if(col < -256 or col > 255): continue
+
+                    row = (int)(posy - y_2d - 0.5)
+                    if(row < -256 or row > 255): continue
+                    
+                    #test_img.set_pixel(row+256,col+256,px.Intensity());
+                    pix_img.set_pixel(col+256,row+256,px.Intensity());
+                
+                
+                #img_pix = larcv.cluster_to_image2d(pixel2d_pix,cfg.xdim,cfg.ydim)
+                #img_int = larcv.cluster_to_image2d(pixel2d_int,cfg.xdim,cfg.ydim)
+                img_pix = pix_img
+                img_int = int_img
 
                 #Plot the image from pgraph
                 '''
