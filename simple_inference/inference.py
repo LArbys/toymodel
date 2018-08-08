@@ -15,6 +15,11 @@ from lib.rootdata import ROOTData
 
 larcv.LArbysLoader()
 
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="2"
+
+p_type = {0:"eminus", 1:"gamma", 2:"muon", 3:"piminus",4:"proton"}
+
 def pad_with(vector, pad_width, iaxis, kwargs):
     pad_value = kwargs.get('padder', 0)
     vector[:pad_width[0]] = pad_value
@@ -54,16 +59,16 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
     #    
     image_dim = np.array([1,1,cfg.xdim,cfg.ydim])
     data_tensor    = tf.placeholder(tf.float32, [None, image_dim[2] * image_dim[3]],name='x')
-    data_tensor_2d = tf.reshape(data_tensor, [-1,image_dim[2],image_dim[3],1])
+    data_tensor_2d_pid = tf.reshape(data_tensor, [-1,image_dim[2],image_dim[3],1])
     
     from toynet import toy_pid
-    
-    net = toy_pid.build(data_tensor_2d,cfg.num_class,trainable=False,keep_prob=1)
+
+    net       = toy_pid.build(data_tensor_2d_pid,cfg.num_class,trainable=False,keep_prob=1)
     
     # Define accuracy
-    sigmoid = None
-    with tf.name_scope('sigmoid'):
-        sigmoid = tf.nn.sigmoid(net)
+    sigmoid              = None
+    
+    sigmoid = tf.nn.sigmoid(net)
 
     session_conf = tf.ConfigProto(intra_op_parallelism_threads=1,inter_op_parallelism_threads=1)
     sess = tf.InteractiveSession(config=session_conf)
@@ -85,15 +90,17 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
     iom.initialize()
 
     for entry in xrange(iom.get_n_entries()):
+        if (entry!=26): continue
         print "@entry={}".format(entry)
-        
+
         iom.read_entry(entry)
 
         ev_pgr = iom.get_data(larcv.kProductPGraph,"test")
         ev_pix = iom.get_data(larcv.kProductPixel2D,"test_super_img")
         ev_img = iom.get_data(larcv.kProductImage2D,"wire")
         
-        print ev_pix.run(),ev_pix.subrun(),ev_pix.event()
+        print '========================>>>>>>>>>>>>>>>>>>>>'
+        print 'run, subrun, event',ev_pix.run(),ev_pix.subrun(),ev_pix.event()
 
         rd.run[0]    = int(ev_pix.run())
         rd.subrun[0] = int(ev_pix.subrun())
@@ -102,10 +109,13 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
 
         rd.num_vertex[0] = int(ev_pgr.PGraphArray().size())
 
-        
+        print 'num of vertices, ',rd.num_vertex[0]
+        print 'pgrapgh size, ',int(ev_pgr.PGraphArray().size())
+
         
         for ix,pgraph in enumerate(ev_pgr.PGraphArray()):
             print "@pgid=%d" % ix
+            if (ix != 2): continue
             rd.vtxid[0] = int(ix)
 
             pixel2d_vv = ev_pix.Pixel2DClusterArray()
@@ -119,7 +129,11 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
             y_2d_plane_0 = ROOT.Double()
 
             for plane in xrange(3):
+                
                 if plane == 0: continue
+                
+                if plane == 1: continue
+                        
                 print "@plane=%d" % plane
 
                 ### Get 2D vertex Image
@@ -139,8 +153,8 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
                 
                 ###
                 weight_file = ""
-                exec("weight_file = cfg.weight_file%d" % plane)
-
+                exec("weight_file = cfg.weight_file_pid%d" % plane)
+                
                 reader.restore(sess,weight_file)
 
                 # nothing
@@ -171,53 +185,85 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
                 do_occlusion = cfg.do_occlusion
                 if (do_occlusion):
                 
-                    stride = 3                 
+                    stride = 3
                 
-                    occlusion_scores_5par = np.zeros(shape = [5, cfg.xdim-stride+1, cfg.ydim-stride +1])
+                    occlusion_scores_5par = np.zeros(shape = [5, cfg.xdim, cfg.ydim])
                     
                     img_ndarray = larcv.as_ndarray(img)
-                    '''
-                    for x in xrange(img_ndarray.shape[0]):
-                        for y in xrange(img_ndarray.shape[1]):
-                            if (img_ndarray[x,y]>0):
-                                print img_ndarray[x,y]
-                    '''
+
+                    y = 0
                     #for y in xrange(cfg.ydim - stride +1):
-                    for y in xrange(200, 400):
+                    while y < 500:
                         print 'y',y,'/',cfg.ydim - stride
                         #for x in xrange(cfg.xdim - stride +1):
-                        for x in xrange(200, 400):
+                        x = 0
+                        while x < 500:
                             print 'y',y,'/', cfg.ydim - stride ,'x',x,'/', cfg.xdim - stride
                             test = img_ndarray.copy()
-                            for s in xrange(stride):
-                                test[y+s,x:x+stride]  = [0,0,0]
-                                score_vv = sess.run(sigmoid,feed_dict={data_tensor: img_arr})
-                                for idx in xrange(5):
-                                    occlusion_scores_5par[idx,x, y]  = score_vv[0][idx]
-
-                    np.savetxt("output_txt/occlusion_%i_%i_%i_%i.txt"%(ev_pix.run(), ev_pix.subrun(), ev_pix.event(), plane), occlusion_scores_5pars)
+                            #for s in xrange(stride):
+                            #print test[y:y+stride,x:x+stride].shape
+                            #print np.zeros((stride, stride)).shape
+                            test[y:y+stride,x:x+stride]  = np.zeros((stride, stride))
+                            test = larcv.as_image2d(test)
+                            test = image_modify(test,cfg)
+                            print np.mean(test), np.mean(img_arr)
+                            
+                            test_ = test.reshape(512,512)
+                            test_ = test_.T
+                            '''#test_ = np.fliplr(test_)
+                            #dump image
+                            fig, ax = plt.subplots(nrows=1, ncols=2, figsize = (18, 6))
+                            img_ = img_arr.reshape(512,512)
+                            
+                            ax[0].imshow(test_)
+                            ax[1].imshow(img_)
+                            plt.savefig("image/y%i_x%i"%(y,x))
+                            '''
+                            test = test_.reshape(1,512*512)
+                            score_vv = sess.run(sigmoid,feed_dict={data_tensor: test})
+                            print score_vv[0]
+                            #score_vv = sess.run(sigmoid,feed_dict={data_tensor: img_arr})
+                            #print score_vv[0]
+                            sys.stdout.flush()
+                            x+=1
+                            for idx in xrange(5):
+                                occlusion_scores_5par[idx,x, y]  = score_vv[0][idx]
+                        y+=1
+                    for x in xrange(5):
+                        np.savetxt("output_txt/occlusion_graph_%s_%i_%i_%i_%i.txt"%(p_type[x],ev_pix.run(), ev_pix.subrun(), ev_pix.event(), plane), occlusion_scores_5par[x], fmt="%.6f")
+                        
                     '''
                     fig, axes = plt.subplots(nrows=5, ncols=1, figsize = (8, 6))
                     axes[0].imshow(occlusion_scores_eminus)
                     plt.savefig("image/%i_%i_%i_occlusion_plane_eminus_%i"%(ev_pix.run(), ev_pix.subrun(), ev_pix.event(), plane))
                     '''
-                
+                    
                 img_arr = np.array(img.as_vector())
                 img_arr = np.where(img_arr<cfg.adc_lo,         0,img_arr)
                 img_arr = np.where(img_arr>cfg.adc_hi,cfg.adc_hi,img_arr)
                 img_arr = img_arr.reshape(cfg.batch,img_arr.size).astype(np.float32)
 
-            
+                #score
                 score_vv = sess.run(sigmoid,feed_dict={data_tensor: img_arr})
                 score_v  = score_vv[0]
-                print 'score_v, ',score_v
 
+                print 'scores are ',score_v
+                
                 rd.eminus_score[plane] = score_v[0]
                 rd.gamma_score[plane]  = score_v[1]
                 rd.muon_score[plane]   = score_v[2]
                 rd.pion_score[plane]   = score_v[3]
                 rd.proton_score[plane] = score_v[4]
-                
+
+                '''
+                rd.eminus_score[plane] = np.max(multiplicity_v[0:5])
+                rd.gamma_score[plane]  = np.max(multiplicity_v[0:5])score_v[1]
+                rd.muon_score[plane]   = np.max(multiplicity_v[0:5])score_v[2]
+                rd.pion_score[plane]   = np.max(multiplicity_v[0:5])score_v[3]
+                rd.proton_score[plane] = np.max(multiplicity_v[0:5])score_v[4]
+                '''
+
+
                 ###### Adding scores for vertex images
                 #print x_2d, y_2d , 'x2d, y2d'
                 meta_crop = larcv.ImageMeta(256,256*6,
@@ -240,14 +286,13 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
                 if (plane == 0): meta_origin_x = min(meta_origin_x, 3456-256)
                 if (plane == 1): meta_origin_x = min(meta_origin_x, 3456-256)
                 if (plane == 2): meta_origin_x = min(meta_origin_x, 3456-256)
-                print meta_origin_x
 
                 meta_origin_y = max(y_2d*6+2400 + 128 *6, 5472)
                 if (plane == 0): meta_origin_y = min(meta_origin_y, 8448-128*6-1)
                 if (plane == 1): meta_origin_y = min(meta_origin_y, 8448-128*6-1)
                 if (plane == 2): meta_origin_y = min(meta_origin_y, 8448-128*6-1)
                 meta_crop.reset_origin(meta_origin_x, meta_origin_y)
-                print meta_origin_y
+
                 #Plot the image from vertex
                 '''
                 print 'Vertex Meta'
@@ -277,27 +322,27 @@ def main(IMAGE_FILE,VTX_FILE,OUT_DIR,CFG):
                 print test_meta.tr().x,test_meta.tr().y
                 print test_meta.br().x,test_meta.br().y
                 '''
-                print entry
+
                 img_vtx = larcv.as_ndarray(img_vtx)
-                print 'shape, ',img_vtx.shape
+
                 img_vtx = np.pad(img_vtx, 128, pad_with)
                 img_vtx = np.where(img_vtx<cfg.adc_lo,         0,img_vtx)
                 img_vtx = np.where(img_vtx>cfg.adc_hi,cfg.adc_hi,img_vtx)
                 img_vtx_arr = img_vtx.reshape(cfg.batch,img_vtx.size).astype(np.float32)
 
                 #print img_vtx_arr.shape
-                score_vv_vtx = sess.run(sigmoid,feed_dict={data_tensor: img_vtx_arr})
-                score_v_vtx  = score_vv_vtx[0]
-                print 'score_v_vtx',score_v_vtx
-                p_type = {0:"eminus", 1:"gamme", 2:"muon", 3:"piminus",4:"proton"}
+                #score_vv_vtx = sess.run(sigmoid,feed_dict={data_tensor: img_vtx_arr})
+                #score_v_vtx  = score_vv_vtx[0]
+                #print 'score_v_vtx',score_v_vtx
+
                 
                 #for x in xrange(5): print p_type[x], score_v_vtx[x]
                     
-                rd.eminus_score_vtx[plane] = score_v_vtx[0]
-                rd.gamma_score_vtx[plane]  = score_v_vtx[1]
-                rd.muon_score_vtx[plane]   = score_v_vtx[2]
-                rd.pion_score_vtx[plane]   = score_v_vtx[3]
-                rd.proton_score_vtx[plane] = score_v_vtx[4]
+                #rd.eminus_score_vtx[plane] = score_v_vtx[0]
+                #rd.gamma_score_vtx[plane]  = score_v_vtx[1]
+                #rd.muon_score_vtx[plane]   = score_v_vtx[2]
+                #rd.pion_score_vtx[plane]   = score_v_vtx[3]
+                #rd.proton_score_vtx[plane] = score_v_vtx[4]
                 
                 ######
                 
